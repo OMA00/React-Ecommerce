@@ -1,49 +1,88 @@
-import React from "react";
-import ProductCard from "./Mini-Components/ProductCard";
+import React, { useState } from "react";
+import { useProducts } from "../contexts/ProductContext";
+import { Plus } from "lucide-react";
 
 const ProductGrid = () => {
+  //Bring in context values
+  const { products, loading, error } = useProducts();
+  const [showPrice, setShowPrice] = useState(null);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        Loading Products.....
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className=" flex items-center justify-center h-64">
+        Error: {error}
+      </div>
+    );
+  } 
+
+  // show only the first 7
+  const displayProducts = products.data.slice(0, 7);
+
+  const handlePlusClick = (productSku) => {
+    setShowPrice(showPrice === productSku ? null : productSku);
+  };
   return (
-    <div
-      className="grid grid-cols-1 sm:grid-cols-2
-     lg:grid-col-4
-     gap-6 p-4 md:p-8
-"
-    >
-      <div className="space-y-6">
-        <ProductCard title="Sofas" imageUrl={"/Sofas.svg"} />
-        <ProductCard title="Tables" imageUrl={"/Stools.svg"} />
-        <ProductCard
-          title="Floor lamps & Fixtures"
-          imageUrl={"/big stools.svg"}
-        />
-        <ProductCard title="Commode" imageUrl={"/drawer.svg"} />
-      </div>
-      <div>
-        <ProductCard title="CupBoard" imageUrl={"/CupBoard.svg"} />
-        <ProductCard
-          title="Beds & Matresses.svg"
-          imageUrl={"/Beds & Matresses.svg"}
-        />
-        <div
-          className=" bg-gray-200
-         text-white p-6 rounded-lg shadow-md flex flex-col justify-between"
-        >
-          <h2 className="font-pop text-2xl font-bold">
-            Get<span className="text-babyGreen">10%</span>Discount
-          </h2>
-          <p>Get 10% discount with notified</p>
-          <input
-            type="text"
-            placeholder="Enter your email address"
-            className="border border-1px-solid"
-          />
-        </div>
-        <ProductCard
-          className="w-[413px] h-[413px]"
-          title="Shelving"
-          imageUrl={"/Shelving.svg"}
-        />
-      </div>
+    <div>
+      <section className="min-h-screen bg-gray-50 p-4">
+         <div className="max-w-4xl mx-auto">
+          {/*2 column masonry*/}
+          <div className="column-2 gap-4 space-y-4">
+            {displayProducts.map((product)) => (
+              <div className="break-inside-avoid mb-4" key={product.sku}>
+                {/* Product Card Image */} {/* still work here to fully understand */}  
+                <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+                  <img src={product.images[0]?.url || ""} alt={product.images[0]?.url || "Random alt"} 
+                  className= "w-full h-auto object-cover"
+                   loading = "lazy"/>
+                </div>
+
+
+
+                {/*Product info below card*/ }
+                <div className="mt-3 items-center justify-center">
+                  <h3 className="text-sm font-medium text-gray-900 flex-1 mr-2">
+                        {product.name}
+                  </h3>
+
+
+
+                {/*plus icon */}
+                <button onClick={() => handlePlusClick(product.sku)}>
+                   <Plus/>
+                  </button>
+                  
+               {/* Conditional price display */}
+               { showPrice === product.sku && (
+                  <div className="mt-2 bg-gray-100 rounded text-sm">
+                    <div className ="flex items-center space-x-2">
+                      <span className="font-bold text-gray-900">
+                           ${product.price}
+                        </span>
+
+                      {product.originalPrice > product.price && (
+                        <span>${product.originalPrice}</span>
+                      ) }       
+                    </div>
+                  </div>
+
+               )}   
+
+                </div>
+
+              </div>
+            )
+            }
+          </div>
+         </div>
+      </section>
     </div>
   );
 };

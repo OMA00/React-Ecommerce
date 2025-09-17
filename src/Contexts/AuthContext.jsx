@@ -1,3 +1,4 @@
+import { Children } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
@@ -58,4 +59,109 @@ export const Authprovider = ({ children }) => {
     localStorage.removeItem(tokenValue);
     localStorage.removeItem(userValue);
   };
+
+  //Register
+  const register = async (name, email, password) => {
+    setisLoading(true);
+    setError(false);
+
+    try {
+      const res = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || `Error ${res.status}`);
+
+      //response
+      saveSession(data.token, data.value);
+    } catch (error) {
+      setError(error.message);
+
+      throw error;
+    } finally {
+      setisLoading(false);
+    }
+  };
+
+  //Login
+  const login = async (email, password) => {
+    setisLoading(true);
+    setError(false);
+
+    try {
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || `Error${res.status}`);
+
+      saveSession(data.token, data.user);
+      return data;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setisLoading(false);
+    }
+  };
+
+  //Profile
+  const fetchProfile = async () => {
+    if (!token) return null;
+    setisLoading(true);
+    setError(false);
+
+    try {
+      const res = await fetch(`${API_URL}/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res) throw new Error(data?.message || `Error ${res.status}`);
+
+      if (data?.user) {
+        setUser(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        return data;
+      }
+    } catch (error) {
+      // token becomes invalid logout silently
+      clearSession();
+      setError(error.message);
+
+      return null;
+    } finally {
+      setisLoading(false);
+    }
+  };
+
+  // Logout
+  const logout = () => {
+    clearSession();
+  };
+
+  const contextValue = {
+    //States
+    user,
+    token,
+    isLoading,
+    error,
+
+    //Functions
+    register,
+    login,
+    fetchProfile,
+    logout,
+
+    //Auth check
+    isAuthenticated: !!token && !!user,
+  };
+
+  return (
+    <AuthContext.Provider value={contextValue}>{Children}</AuthContext.Provider>
+  );
 };

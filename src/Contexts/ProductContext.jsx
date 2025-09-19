@@ -46,4 +46,49 @@ export const ProductProvider = ({ children }) => {
   useEffect(() => {
     loadProducts();
   }, []);
+  // Simple functionality needed in componenets
+  const getProductsByCategory = (category) => {
+    return products.filter(
+      (product) => product.category?.ToLowercase() === category.ToLowercase()
+    );
+  };
+
+  const searchProducts = (searchTerm) => {
+    return products.filter((products) => {
+      products.name?.ToLowercase.includes(searchTerm.ToLowercase()) ||
+        products.description?.ToLowercase.includes(searchTerm.ToLowercase());
+    });
+  };
+
+  const getCategories = () => {
+    const categories = products
+      .map((product) => product.category)
+      .filter(Boolean);
+
+    return [...new Set(categories)];
+  };
+
+  const refetch = async () => {
+    setError(null);
+    await loadProducts();
+  };
+
+  const value = {
+    //State
+    products,
+    loading,
+    error,
+
+    // Methods of funcs
+    getProductsByCategory,
+    getCategories,
+    searchProducts,
+    refetch,
+  };
+
+  return (
+    <ProductsContext.Provider value={value}>
+      {children}
+    </ProductsContext.Provider>
+  );
 };
